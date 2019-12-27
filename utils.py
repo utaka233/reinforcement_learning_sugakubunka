@@ -37,7 +37,6 @@ def plot_demo(env, pol, n_episodes, steps_per_episode):
     n_success = np.zeros(shape = (n_episodes, ))    # 125℃以上130℃以下に温度を調節出来たstep数（120steps中）
     fig, (axL, axM, axR) = plt.subplots(ncols = 3, figsize = (16, 5))
     for i in range(n_episodes):
-        rew.reset()
         rewards_in_episode = []
         states_history = np.asarray([])    # 現episodeでのstateのhistory
         state = env.reset()
@@ -65,7 +64,6 @@ def plot_demo(env, pol, n_episodes, steps_per_episode):
 def val_cumulative_reward(env, pol, steps_per_episode):
     pol = copy.deepcopy(pol)
     rew = Reward()
-    rew.reset()
     rewards_in_episode = []
     state = env.reset()
     for i in range(steps_per_episode):

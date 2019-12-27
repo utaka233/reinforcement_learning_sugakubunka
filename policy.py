@@ -20,7 +20,7 @@ class RandomPolicy():
         
     def get_action(self, state):
         action = np.random.binomial(n = 1, p = self.p, size = 1)    # stateに依存せずに行動が決まる。
-        return action
+        return int(action)
     
 
 """
@@ -30,8 +30,6 @@ class ValueIteration():
     def __init__(self, method):
         self.Q_table = np.random.rand(17, 2)    # stateを17 categoriesに分割（binning_state methodを参照）
         self.fit_counter = np.zeros(shape = (17, 2))
-        self.state_history = []
-        self.action_history = []
         self.temporal_difference_error = []
         self.mean_temporal_difference_errors = []
         self.val_cumulative_rewards = []
@@ -39,38 +37,31 @@ class ValueIteration():
         assert method == "Sarsa" or method == "Q_learning", "You can set methods Sarsa or Q_learning."
         
     def reset_history(self):
-        self.state_history = []
-        self.action_history = []
         self.temporal_difference_error = []
         
     def get_action(self, state, epsilon = 0.0):
-        # ひとまずQ-tableから次の行動を計算する。
         state_index = binning_state(state)
-        self.state_history.append(state_index)    # stateのbinをログに保存する。
         action_values = self.Q_table[state_index]
         action = np.argmax(action_values)
-        # Q-learningの場合、このQ-tableから計算される行動をログに保存する。
-        if self.method == "Q_learning":
-            self.action_history.append(action)
         # ε-greedy method : 探索する場合、actionをランダムな決定に上書きする。
         if np.random.binomial(n = 1, p = epsilon, size = 1) == 1:
             action = int(np.random.binomial(n = 1, p = 0.5, size = 1))
-        # Sarsaの場合、実際に起こすactionをログに保存する。
-        if self.method == "Sarsa":
-            self.action_history.append(action)
         return action
     
-    def fit(self, reward, gamma, learning_rate, end_of_episode, val = False):
+    def fit(self, reward, gamma, learning_rate, end_of_episode, 
+            state, action, state_ = None, action_ = None, val = False):
         if end_of_episode == False:
-            state_pre, state = self.state_history[-2], self.state_history[-1]
-            action_pre, action = self.action_history[-2], self.action_history[-1]
-            temporal_difference = reward + gamma * self.Q_table[state, action] - self.Q_table[state_pre, action_pre]
-            self.Q_table[state_pre, action_pre] += learning_rate * temporal_difference
+            state, state_ = binning_state(state), binning_state(state_)
+            if self.method == "Q_learning":
+                    action_values = self.Q_table[state_]
+                    action_ = np.argmax(action_values)
+            temporal_difference = reward + gamma * self.Q_table[state_, action_] - self.Q_table[state, action]
+            self.Q_table[state, action] += learning_rate * temporal_difference
             # 学習の挙動を確認するためのログを残す。（学習したQ-tableのセルとTD誤差）
-            self.fit_counter[state_pre, action_pre] += 1
+            self.fit_counter[state, action] += 1
             self.temporal_difference_error.append(temporal_difference)
         elif end_of_episode == True:
-            state, action = self.state_history[-1], self.action_history[-1]
+            state = binning_state(state)
             self.Q_table[state, action] += learning_rate * (reward - self.Q_table[state, action])
             # 学習の挙動を確認するためのログを残す。（学習したQ-tableのセル, 1 episodeでのTD誤差の絶対値の平均値）
             self.temporal_difference_error.append(reward - self.Q_table[state, action])

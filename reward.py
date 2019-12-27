@@ -5,11 +5,7 @@ import numpy as np
 
 class Reward():
     def __init__(self):
-        self.reward_ = None
-        
-    def reset(self):
-        self.reward_ = 0 
-        return self.reward_
+        self.reward_ = 0
     
     def get_reward(self, state):
         if state >= 125 and state <= 130:
