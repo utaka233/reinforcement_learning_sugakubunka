@@ -1,0 +1,2 @@
+# reinforcement_learning_sugakubunka
+すうがくぶんかでの『強化学習入門』の講座資料
