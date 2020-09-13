@@ -1,5 +1,5 @@
 """
-Copyright 2019-2020 @utaka233, at Sugakubunka.inc
+Copyright 2019- @utaka233, at Sugakubunka.inc
 
 実装時の注意
 ・policyは必ずclassで実装する。
@@ -101,23 +101,20 @@ class PolicyGradient():
         self.action_history.append(action)    # actionをログに保存する。
         return action
     
-    def fit(self, reward, gamma, learning_rate, end_of_episode, use_baseline = True, val = False):
+    def fit(self, reward, gamma, learning_rate, end_of_episode, val = False):
         if end_of_episode == False:    # rewardのログを保存するのみ。
             self.reward_history = np.append(self.reward_history, reward)
         if end_of_episode == True:    # 学習の実行
             self.reward_history = np.append(self.reward_history, reward)    # rewardのログを保存
             # 以下、ログを読み込んで学習を始める。
             state, action, reward = self.state_history, self.action_history, self.reward_history
+            cumulative_reward = np.sum([r * (gamma ** t) for t, r in enumerate(reward)])
             for i in range(len(state)):
                 policy_value = softmax(self.parameter_table[state[i], :])[action[i]]
-                cumulative_reward = np.sum([r * (gamma ** t) for t, r in enumerate(reward[i:])])
-                if use_baseline == True:
-                    baseline = np.sum([r * (gamma ** t) for t, r in enumerate(reward[:i])])
-                else:
-                    baseline = 0
-                self.gradient[state[i], action[i]] += (cumulative_reward - baseline) * (1-policy_value)
-                self.gradient[state[i], 1-action[i]] += (cumulative_reward - baseline) * (-(1-policy_value))
+                self.gradient[state[i], action[i]] += (cumulative_reward) * (1-policy_value)
+                self.gradient[state[i], 1-action[i]] += (cumulative_reward) * (-policy_value)
                 self.fit_counter[state[i], action[i]] += 1    # 各パラメータの学習回数の確認ログ
+                self.fit_counter[state[i], 1-action[i]] += 1    # 各パラメータの学習回数の確認ログ
             self.parameter_table += learning_rate * self.gradient
             # 学習の挙動を確認するためのログを保存
             self.mean_absolute_gradient_history.append(np.mean(np.abs(self.gradient)))

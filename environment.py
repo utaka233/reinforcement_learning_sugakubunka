@@ -1,5 +1,5 @@
 """
-Copyright 2019-2020 @utaka233, at Sugakubunka.inc
+Copyright 2019- @utaka233, at Sugakubunka.inc
 """
 import numpy as np
 
